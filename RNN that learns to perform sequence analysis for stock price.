@@ -1,0 +1,45 @@
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler
+from keras.models import Sequential
+from keras.layers import Dense, LSTM
+# Load the dataset
+df=pd.read_csv('https://raw.githubusercontent.com/kk289/Stock_Price_Prediction/master/AAPL.csv', index_col='Date', parse_dates=['Date'])
+# Check the dataframe information
+df.info()
+# Extract the 'Close' price as a numpy array
+prices = df['Close'].values.reshape(-1, 1)
+# Scale the data using Min-Max Scaler
+scaler = MinMaxScaler()
+prices_scaled = scaler.fit_transform(prices)
+# Create the RNN Model
+model = Sequential()
+model.add(LSTM(units=50, return_sequences=True, input_shape=(20, 1)))  # Input shape matches the sequence length and features
+model.add(LSTM(units=50))
+model.add(Dense(1))
+model.compile(loss='mean_squared_error', optimizer='adam')
+# Split the data into training and testing sets
+train_size = int(0.8 * len(prices_scaled))
+train_data, test_data = prices_scaled[0:train_size], prices_scaled[train_size:]
+# Create sequences of 20 time steps
+def create_sequences(data, seq_len):
+    X, y = [], []
+    for i in range(len(data) - seq_len):
+        X.append(data[i:i + seq_len])
+        y.append(data[i + seq_len])
+    return np.array(X), np.array(y)
+# Prepare training and testing data with sequences of 20 time steps
+X_train, y_train = create_sequences(train_data, 20)
+X_test, y_test = create_sequences(test_data, 20)
+# Reshape the data for the LSTM model
+X_train = X_train.reshape(X_train.shape[0], X_train.shape[1], 1)
+X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)
+# Train the model
+model.fit(X_train, y_train, epochs=50, batch_size=32, validation_data=(X_test, y_test))
+# Evaluate the model on the test data
+mse = model.evaluate(X_test, y_test)
+print(f'MSE: {mse}')
+# Use the model to make predictions on the test data
+predictions = model.predict(X_test)
+# Inverse scale the predictions to get the original price range
+predicted_prices = scaler.inverse_transform(predictions)
