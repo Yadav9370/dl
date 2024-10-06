@@ -1,24 +1,22 @@
+#pip install tensorflow
+#pip install numpy
+
 import tensorflow as tf
 import numpy as np
 
-# Define two 2x2 matrices
 A = tf.constant([[1, 2], [3, 4]], dtype=tf.float32)
 B = tf.constant([[5, 6], [7, 8]], dtype=tf.float32)
 
 # Perform matrix multiplication
 C = tf.matmul(A, B)
 
-# Print the result of matrix multiplication
 print("Matrix multiplication result:")
 print(C)
 
-# Define a 2x2 matrix for eigen decomposition
 M = tf.constant([[1, 2], [3, 4]], dtype=tf.float32)
 
-# Compute eigenvalues and eigenvectors using TensorFlow's linalg module
 eigenvalues, eigenvectors = tf.linalg.eig(M)
 
-# Print the eigenvalues and eigenvectors
 print("Eigenvalues:")
 print(eigenvalues)
 print("Eigenvectors:")
