@@ -1,0 +1,33 @@
+from keras.models import Sequential
+from keras.layers import Dense
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import OneHotEncoder
+import numpy as np
+from sklearn.datasets import make_classification
+# Generate synthetic multi-class classification data
+X, y = make_classification(n_samples=1000, n_features=20, n_classes=3,
+                           n_informative=15, n_clusters_per_class=1, random_state=42)
+# One-hot encode the labels
+onehot_encoder = OneHotEncoder(sparse=False)
+y_encoded = onehot_encoder.fit_transform(y.reshape(-1, 1))
+# Split data into training and validation sets
+X_train, X_val, y_train, y_val = train_test_split(X, y_encoded,
+                                                  test_size=0.2, random_state=42)
+# Define a function to create a new model
+def create_model(input_shape, num_classes):
+    model = Sequential()
+    model.add(Dense(64, activation='relu', input_shape=(input_shape,)))  # Input shape matches the number of features
+    model.add(Dense(32, activation='relu'))
+    model.add(Dense(num_classes, activation='softmax'))  # Output layer for multi-class classification
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    return model
+# Create and train the model
+model = create_model(X_train.shape[1], y_train.shape[1])
+model.fit(X_train, y_train, epochs=100, batch_size=32, verbose=0)
+# Predict and evaluate
+y_pred = model.predict(X_val)
+y_pred_classes = np.argmax(y_pred, axis=1)
+y_val_classes = np.argmax(y_val, axis=1)
+accuracy = accuracy_score(y_val_classes, y_pred_classes)
+print('Validation Accuracy:', accuracy)
